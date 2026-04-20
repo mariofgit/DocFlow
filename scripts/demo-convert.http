@@ -1,0 +1,18 @@
+### Docling service — examples for VS Code REST Client
+### Variables: set apiKey to match DOCLING_API_KEY in your `.env`.
+
+@baseUrl = http://127.0.0.1:8080
+@apiKey = local-demo-change-me
+
+### Health check (no API key required)
+GET {{baseUrl}}/health
+
+### For multipart upload, use the shell script (recommended):
+###   ./scripts/demo-convert.sh samples/local-demo.pdf
+###
+### Or curl:
+### curl -sS -X POST "{{baseUrl}}/api/v1/convert" \
+###   -H "X-API-Key: {{apiKey}}" \
+###   -F "file=@samples/local-demo.pdf" \
+###   -F "output_format=markdown" \
+###   -F "ocr_enabled=true"

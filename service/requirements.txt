@@ -1,0 +1,6 @@
+# Pin docling for reproducible Docker builds (linux wheels).
+docling==2.69.1
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+gunicorn==23.0.0
+python-multipart==0.0.20

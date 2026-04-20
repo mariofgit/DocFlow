@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DocFlow — Conversión de documentos</title>
+    <link rel="stylesheet" href="/docflow-assets/styles.css" />
+    <!-- DOCFLOW_UI_INJECT -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">Neuforce · NEU-577</p>
+        <h1>DocFlow</h1>
+        <p class="lede">
+          Convierte documentos a <strong>Markdown</strong> o <strong>JSON</strong> con Docling.
+          Misma API que en producción; interfaz mínima para pruebas humanas y flujos con IA.
+        </p>
+      </header>
+
+      <section class="panel" aria-labelledby="form-title">
+        <h2 id="form-title" class="panel-title">Nueva conversión</h2>
+        <form id="convert-form" class="form">
+          <label class="field">
+            <span class="label">Clave API <code>X-API-Key</code></span>
+            <input
+              type="password"
+              id="api-key"
+              name="apiKey"
+              autocomplete="off"
+              placeholder="Mismo valor que DOCLING_API_KEY en el servidor"
+              required
+            />
+            <p class="hint" id="server-key-hint" hidden>
+              Clave precargada desde el servidor (modo local). No habilitar en producción.
+            </p>
+            <label class="inline-check">
+              <input type="checkbox" id="remember-key" />
+              Recordar en esta pestaña (sessionStorage)
+            </label>
+          </label>
+
+          <label class="field">
+            <span class="label">Archivo</span>
+            <input type="file" id="file" name="file" required />
+            <span class="hint">Máx. 10 MB · PDF, DOCX, PPTX, HTML, imágenes…</span>
+          </label>
+
+          <div class="row">
+            <label class="field grow">
+              <span class="label">Formato de salida</span>
+              <select id="output-format" name="output_format">
+                <option value="markdown" selected>Markdown</option>
+                <option value="json">JSON (modelo Docling)</option>
+              </select>
+            </label>
+            <label class="field checkbox-field">
+              <span class="label">OCR</span>
+              <label class="toggle">
+                <input type="checkbox" id="ocr-enabled" name="ocr_enabled" checked />
+                <span>Activado</span>
+              </label>
+            </label>
+          </div>
+
+          <button type="submit" class="primary" id="submit-btn">
+            <span class="btn-label">Convertir documento</span>
+            <span class="btn-spinner" hidden aria-hidden="true"></span>
+          </button>
+        </form>
+      </section>
+
+      <section class="panel" aria-labelledby="results-title">
+        <h2 id="results-title" class="panel-title">Resultado</h2>
+        <p id="error" class="error" role="alert" hidden></p>
+        <div class="table-wrap">
+          <table class="results" id="results-table">
+            <thead>
+              <tr>
+                <th>Archivo</th>
+                <th>Estado</th>
+                <th>Formato</th>
+                <th>Páginas</th>
+                <th>Tiempo</th>
+                <th>OCR</th>
+              </tr>
+            </thead>
+            <tbody id="results-body">
+              <tr class="placeholder-row">
+                <td colspan="6">Aún no hay conversiones en esta sesión.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="output-panel" id="output-panel" hidden>
+          <div class="output-header">
+            <h3>Salida del documento</h3>
+            <div class="tabs" role="tablist">
+              <button type="button" class="tab active" data-tab="preview" role="tab" aria-selected="true">
+                Vista
+              </button>
+              <button type="button" class="tab" data-tab="raw" role="tab" aria-selected="false">
+                Raw
+              </button>
+            </div>
+          </div>
+          <div id="tab-preview" class="tab-pane active prose" role="tabpanel"></div>
+          <pre id="tab-raw" class="tab-pane raw" role="tabpanel" hidden></pre>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <p>API: <code>POST /api/v1/convert</code> · Límite síncrono según PRD (10 MB / 120 s).</p>
+      </footer>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+    <script src="/docflow-assets/app.js" defer></script>
+  </body>
+</html>

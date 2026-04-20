@@ -1,0 +1,31 @@
+{
+  "staging": {
+    "cpu": 256,
+    "memory": 512,
+    "desiredCount": 1,
+    "gunicornWorkers": 2,
+    "public": true,
+    "publicDns": {
+      "hostedZoneId": "Z0756872BCLQQ2SZ29SE",
+      "apexDomain": "neuforce.ai",
+      "tenantSubdomainPrefix": "dom"
+    }
+  },
+  "production": {
+    "cpu": 1024,
+    "memory": 2048,
+    "desiredCount": 2,
+    "gunicornWorkers": 4,
+    "public": true,
+    "publicDns": {
+      "hostedZoneId": "Z0756872BCLQQ2SZ29SE",
+      "apexDomain": "neuforce.ai",
+      "tenantSubdomainPrefix": "documents"
+    },
+    "autoScaling": {
+      "minCount": 2,
+      "maxCount": 6,
+      "cpuTargetUtilization": 70
+    }
+  }
+}

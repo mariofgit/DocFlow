@@ -1,0 +1,25 @@
+# Local-first orchestration: same container image contract as ECS (Dockerfile in ./service).
+# Secrets: use `.env` with DOCLING_API_KEY — the same env var AWS injects from Secrets Manager.
+
+services:
+  docling-api:
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    image: docling-service:local
+    ports:
+      - "8080:8080"
+    # Docling + OCR (p. ej. JPEG) puede superar 2 GB en la primera petición (descarga de modelos RapidOCR).
+    mem_limit: 4g
+    env_file:
+      - .env
+    environment:
+      # Explicit port mapping matches ALB → container 8080 in CDK.
+      PORT: "8080"
+      # Rellena el campo de clave en /ui/ desde DOCLING_API_KEY (solo local; no activar en ECS público).
+      DOCFLOW_UI_PREFILL_API_KEY: "true"
+      # Un solo worker reduce picos de RAM en laptop; sube a 2+ si tienes más memoria asignada a Docker.
+      GUNICORN_WORKERS: "1"
+      # Primera conversión con OCR puede tardar (descarga de modelos dentro del contenedor).
+      SYNC_TIMEOUT_SECONDS: "300"
+      GUNICORN_TIMEOUT: "320"

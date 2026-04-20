@@ -1,0 +1,11 @@
+# Documentación o artefactos locales que no deben versionarse
+/docs/
+
+cdk/node_modules
+cdk/cdk.out
+cdk/dist
+**/__pycache__
+*.py[cod]
+.venv
+.env
+.DS_Store
