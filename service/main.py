@@ -6,8 +6,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import tempfile
+import uuid
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -19,6 +21,24 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from converter import convert_file
 
 MAX_SYNC_BYTES = 10 * 1024 * 1024
+
+
+def _configure_logging() -> None:
+    """Nivel global razonable; `DOCFLOW_DEBUG=true` sube docflow + docling a DEBUG (logs del worker)."""
+    debug = os.environ.get("DOCFLOW_DEBUG", "").strip().lower() in ("1", "true", "yes", "on")
+    level = logging.DEBUG if debug else logging.INFO
+    if not logging.getLogger().handlers:
+        logging.basicConfig(
+            level=level,
+            format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+            datefmt="%Y-%m-%dT%H:%M:%S",
+        )
+    for name in ("docflow", "docling"):
+        logging.getLogger(name).setLevel(level)
+
+
+_configure_logging()
+logger = logging.getLogger("docflow")
 
 
 def _sync_timeout_seconds() -> float:
@@ -220,16 +240,29 @@ async def convert(
     output_format: str = Form("markdown"),
     ocr_enabled: bool = Form(True),
 ):
+    rid = uuid.uuid4().hex[:12]
+    req_headers = {"X-Docflow-Request-Id": rid}
+
     sync_timeout = _sync_timeout_seconds()
     if output_format not in ("markdown", "json"):
         raise HTTPException(
             status_code=400,
             detail='output_format must be "markdown" or "json"',
+            headers=req_headers,
         )
 
     filename = file.filename or "document"
     suffix = Path(filename).suffix.lower() or ".bin"
     data = await file.read()
+    logger.info(
+        "[%s] upload received filename=%s bytes=%s output_format=%s ocr_enabled=%s",
+        rid,
+        filename,
+        len(data),
+        output_format,
+        ocr_enabled,
+    )
+
     if len(data) > MAX_SYNC_BYTES:
         raise HTTPException(
             status_code=413,
@@ -237,26 +270,39 @@ async def convert(
                 "Payload too large for synchronous conversion (max 10 MB). "
                 "Use the async endpoint (Phase 2) for larger files."
             ),
+            headers=req_headers,
         )
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
         tmp.write(data)
         tmp_path = tmp.name
 
+    logger.info("[%s] temp file written %s", rid, tmp_path)
+
     try:
 
         def _run():
             return convert_file(tmp_path, ocr_enabled=ocr_enabled)
 
+        logger.info("[%s] conversion starting (sync_timeout=%ss)", rid, sync_timeout)
         doc, elapsed, ocr_flag = await asyncio.wait_for(
             asyncio.to_thread(_run),
             timeout=sync_timeout,
         )
     except asyncio.TimeoutError:
+        logger.error("[%s] conversion timeout after %ss", rid, sync_timeout)
         raise HTTPException(
             status_code=504,
             detail=f"Conversion exceeded {int(sync_timeout)} seconds",
+            headers=req_headers,
         ) from None
+    except Exception as e:
+        logger.exception("[%s] conversion failed", rid)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Conversion failed: {e!s}",
+            headers=req_headers,
+        ) from e
     finally:
         try:
             os.unlink(tmp_path)
@@ -265,6 +311,7 @@ async def convert(
 
     processing_ms = int(round(elapsed * 1000))
     pages = _page_count(doc)
+    logger.info("[%s] conversion ok pages=%s processing_time_ms=%s", rid, pages, processing_ms)
 
     if output_format == "markdown":
         content = doc.export_to_markdown()
@@ -279,7 +326,7 @@ async def convert(
                 "ocr_applied": ocr_flag,
             },
         }
-        return JSONResponse(content=jsonable_encoder(body))
+        return JSONResponse(content=jsonable_encoder(body), headers=req_headers)
 
     payload = doc.export_to_dict()
     body = {
@@ -293,4 +340,4 @@ async def convert(
             "ocr_applied": ocr_flag,
         },
     }
-    return JSONResponse(content=jsonable_encoder(body))
+    return JSONResponse(content=jsonable_encoder(body), headers=req_headers)

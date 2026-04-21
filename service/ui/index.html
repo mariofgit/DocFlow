@@ -35,8 +35,7 @@
               id="api-key"
               name="apiKey"
               autocomplete="off"
-              placeholder="Mismo valor que DOCLING_API_KEY en el servidor"
-              required
+              placeholder="Mismo valor que DOCLING_API_KEY en el servidor (opcional si el servidor omite auth)"
             />
             <p class="hint" id="server-key-hint" hidden>
               Clave precargada desde el servidor (modo local). No habilitar en producción.
@@ -99,6 +98,20 @@
             </tbody>
           </table>
         </div>
+
+        <details class="debug-panel" id="debug-panel">
+          <summary>Registro de depuración (cliente)</summary>
+          <p class="debug-hint">
+            Pasos del navegador y correlación con <code>X-Docflow-Request-Id</code> en la respuesta. Los detalles de
+            Docling aparecen en los logs del servidor (<code>fly logs</code> / Docker); activa
+            <code>DOCFLOW_DEBUG=true</code> para más verbosidad del SDK.
+          </p>
+          <div class="debug-toolbar">
+            <button type="button" class="ghost" id="debug-clear">Limpiar</button>
+            <button type="button" class="ghost" id="debug-copy">Copiar</button>
+          </div>
+          <pre class="debug-log" id="debug-log" aria-live="polite"></pre>
+        </details>
 
         <div class="output-panel" id="output-panel" hidden>
           <div class="output-header">

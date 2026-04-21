@@ -19,6 +19,29 @@ const outputPanel = document.getElementById("output-panel");
 const tabPreview = document.getElementById("tab-preview");
 const tabRaw = document.getElementById("tab-raw");
 const serverKeyHint = document.getElementById("server-key-hint");
+const debugLogEl = document.getElementById("debug-log");
+const debugPanel = document.getElementById("debug-panel");
+const debugClearBtn = document.getElementById("debug-clear");
+const debugCopyBtn = document.getElementById("debug-copy");
+
+function debugLog(msg, extra) {
+  if (!debugLogEl) return;
+  const ts = new Date().toISOString();
+  const suffix =
+    extra !== undefined
+      ? ` ${typeof extra === "string" ? extra : JSON.stringify(extra)}`
+      : "";
+  const line = `[${ts}] ${msg}${suffix}`;
+  debugLogEl.textContent += (debugLogEl.textContent ? "\n" : "") + line;
+  debugLogEl.scrollTop = debugLogEl.scrollHeight;
+  console.debug(`[DocFlow] ${line}`);
+}
+
+function truncateText(s, max = 8000) {
+  if (s == null) return "";
+  if (s.length <= max) return s;
+  return `${s.slice(0, max)}\n… [recortado, ${s.length} caracteres en total]`;
+}
 
 function escapeHtml(s) {
   const d = document.createElement("div");
@@ -110,6 +133,21 @@ document.querySelectorAll(".tab").forEach((btn) => {
   btn.addEventListener("click", () => activateTab(btn.dataset.tab));
 });
 
+debugClearBtn?.addEventListener("click", () => {
+  if (debugLogEl) debugLogEl.textContent = "";
+});
+
+debugCopyBtn?.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(debugLogEl?.textContent || "");
+    debugLog("Portapapeles: registro copiado.");
+  } catch (e) {
+    debugLog("No se pudo copiar al portapapeles", e.message);
+  }
+});
+
+debugLog("UI lista", { origin: location.origin, href: location.href });
+
 const serverKey =
   typeof window.__DOCFLOW_PREFILL_API_KEY__ === "string"
     ? window.__DOCFLOW_PREFILL_API_KEY__
@@ -150,20 +188,43 @@ form.addEventListener("submit", async (e) => {
   fd.append("output_format", outputFormat.value);
   fd.append("ocr_enabled", ocrEnabled.checked ? "true" : "false");
 
+  debugLog("Inicio conversión", {
+    file: file.name,
+    sizeBytes: file.size,
+    outputFormat: outputFormat.value,
+    ocrEnabled: ocrEnabled.checked,
+    hasApiKey: Boolean(key),
+  });
+
   setLoading(true);
+  const t0 = performance.now();
   try {
     const headers = {};
     if (key) {
       headers["X-API-Key"] = key;
       headers.Authorization = `Bearer ${key}`;
     }
+    debugLog("fetch POST /api/v1/convert", { headerKeys: Object.keys(headers) });
+
     const res = await fetch("/api/v1/convert", {
       method: "POST",
       headers,
       body: fd,
     });
 
+    const elapsedMs = Math.round(performance.now() - t0);
+    const requestId = res.headers.get("x-docflow-request-id");
+    debugLog("Respuesta HTTP", {
+      status: res.status,
+      ok: res.ok,
+      elapsedMs,
+      requestId: requestId || null,
+      contentType: res.headers.get("content-type"),
+    });
+
     const text = await res.text();
+    debugLog("Cuerpo bruto (recortado en registro)", truncateText(text, 4000));
+
     let body;
     try {
       body = JSON.parse(text);
@@ -172,19 +233,33 @@ form.addEventListener("submit", async (e) => {
     }
 
     if (!res.ok) {
+      if (debugPanel) debugPanel.open = true;
       const msg =
         typeof body.detail === "string"
           ? body.detail
           : Array.isArray(body.detail)
             ? body.detail.map((d) => d.msg || d).join("; ")
             : `Error ${res.status}`;
+      debugLog("Error API", { message: msg, requestId: requestId || null });
       showError(msg);
       return;
     }
 
+    debugLog("OK", {
+      requestId: requestId || null,
+      pages: body.metadata?.pages,
+      processingMs: body.metadata?.processing_time_ms,
+      outputFormat: body.output_format,
+    });
     addResultRow(body);
     renderOutput(body);
   } catch (err) {
+    if (debugPanel) debugPanel.open = true;
+    debugLog("Fallo de red o excepción en el cliente", {
+      name: err.name,
+      message: err.message,
+      stack: err.stack ? truncateText(err.stack, 1500) : undefined,
+    });
     showError(err.message || "No se pudo conectar con el servicio.");
   } finally {
     setLoading(false);
