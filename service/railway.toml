@@ -1,9 +1,9 @@
-# Railway: build desde service/ (mismo Dockerfile que Docker Compose / ECS).
+# Usar en Railway con Root Directory = service (contexto = esta carpeta).
 # https://docs.railway.com/reference/config-as-code
 
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "service/Dockerfile"
+dockerfilePath = "Dockerfile"
 
 [deploy]
 healthcheckPath = "/health"

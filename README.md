@@ -138,26 +138,27 @@ docker build --platform linux/amd64 -t docling-service:local ./service
 
 ## Despliegue en Railway (sin AWS)
 
-La app ya usa la variable **`PORT`** que Railway inyecta; el **`Dockerfile`** está en `service/` y se referencia en [`railway.toml`](railway.toml).
+La app ya usa la variable **`PORT`** que Railway inyecta. La config de Railway vive en [`service/railway.toml`](service/railway.toml) junto al **`Dockerfile`**.
 
 ### Cambios en el código (este repo)
 
-- **`railway.toml`** en la raíz de DocFlow: builder Docker, ruta `service/Dockerfile`, health check `GET /health`.
+- **`service/railway.toml`**: builder Docker, `dockerfilePath = "Dockerfile"`, health check `GET /health`.
 - **No** hace falta tocar FastAPI para Railway; opcionalmente puedes definir en el panel las mismas variables que en local (`GUNICORN_WORKERS`, timeouts, etc.).
 
 ### Qué hacer tú en Railway
 
 1. Crea un proyecto y **conecta el repo** de DocFlow (GitHub).
-2. Railway debería detectar **`railway.toml`**. Si no, en el servicio: **Build → Dockerfile path** = `service/Dockerfile` (y confirma que el contexto de build sea la carpeta del Dockerfile, según la doc actual).
-3. **Variables** (mínimo):
+2. **Importante:** en el servicio, **Settings → Root Directory** = **`service`**. Así el contexto de Docker es la carpeta donde están `Dockerfile`, `requirements.txt` y el código (si el contexto es la raíz del repo, falla `COPY requirements.txt`).
+3. Con Root Directory `service`, Railway suele tomar [`service/railway.toml`](service/railway.toml) solo. Si no: **Settings → Config-as-code** → ruta **`service/railway.toml`**, y **Dockerfile path** = **`Dockerfile`**.
+4. **Variables** (mínimo):
    - **`DOCLING_API_KEY`**: genera un secreto largo y guárdalo (mismo uso que en local).
    - **No** definas `DOCFLOW_UI_PREFILL_API_KEY` en público (evitaría inyectar la clave en el HTML).
-4. **Recursos:** Docling es pesado; usa un plan con **suficiente RAM** (orden de **varios GB**). Si hay OOM, sube memoria o deja `GUNICORN_WORKERS=1`.
-5. Opcional en variables:
+5. **Recursos:** Docling es pesado; usa un plan con **suficiente RAM** (orden de **varios GB**). Si hay OOM, sube memoria o deja `GUNICORN_WORKERS=1`.
+6. Opcional en variables:
    - `GUNICORN_WORKERS=1`
    - `SYNC_TIMEOUT_SECONDS=300`
    - `GUNICORN_TIMEOUT=320`
-6. Tras el deploy, abre la **URL pública** que asigne Railway y prueba:
+7. Tras el deploy, abre la **URL pública** que asigne Railway y prueba:
    - `GET https://<tu-servicio>.up.railway.app/health`
    - `POST /api/v1/convert` con `X-API-Key` y `multipart` igual que en local.
 
