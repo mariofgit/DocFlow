@@ -33,6 +33,13 @@ API_KEY_ENV = "DOCLING_API_KEY"
 API_KEY_LOCAL_ALIAS = "API_KEY"
 # Solo entorno local: inyecta DOCLING_API_KEY en la página /ui/ (no usar en ECS público).
 INJECT_UI_KEY_ENV = "DOCFLOW_UI_PREFILL_API_KEY"
+# POC / depuración: si está activo, no se exige X-API-Key (ni variable DOCLING_API_KEY). Nunca en público.
+SKIP_API_KEY_AUTH_ENV = "DOCFLOW_SKIP_API_KEY_AUTH"
+
+
+def _api_key_auth_skipped() -> bool:
+    v = os.environ.get(SKIP_API_KEY_AUTH_ENV, "").strip().lower()
+    return v in ("1", "true", "yes", "on")
 
 
 def _expected_api_key() -> str | None:
@@ -85,6 +92,8 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         if request.method == "OPTIONS":
             return await call_next(request)
+        if _api_key_auth_skipped():
+            return await call_next(request)
         expected = _expected_api_key()
         if not expected:
             return JSONResponse(
@@ -125,6 +134,19 @@ class MaxBodySizeMiddleware(BaseHTTPMiddleware):
 
 
 app = FastAPI(title="Docling conversion service", version="0.1.0")
+
+
+@app.on_event("startup")
+async def _warn_if_api_key_skipped():
+    if _api_key_auth_skipped():
+        import logging
+
+        logging.getLogger("uvicorn.error").warning(
+            "%s is enabled: X-API-Key validation is OFF (POC / debugging only; do not use on the public internet).",
+            SKIP_API_KEY_AUTH_ENV,
+        )
+
+
 app.add_middleware(MaxBodySizeMiddleware)
 app.add_middleware(ApiKeyMiddleware)
 

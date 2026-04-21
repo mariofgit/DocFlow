@@ -129,11 +129,7 @@ form.addEventListener("submit", async (e) => {
   clearError();
 
   const key = apiKeyInput.value.trim();
-  if (!key) {
-    showError("Indica la clave API.");
-    return;
-  }
-  if (rememberKey.checked) {
+  if (rememberKey.checked && key) {
     sessionStorage.setItem(STORAGE_KEY, key);
   } else {
     sessionStorage.removeItem(STORAGE_KEY);
@@ -156,12 +152,14 @@ form.addEventListener("submit", async (e) => {
 
   setLoading(true);
   try {
+    const headers = {};
+    if (key) {
+      headers["X-API-Key"] = key;
+      headers.Authorization = `Bearer ${key}`;
+    }
     const res = await fetch("/api/v1/convert", {
       method: "POST",
-      headers: {
-        "X-API-Key": key,
-        Authorization: `Bearer ${key}`,
-      },
+      headers,
       body: fd,
     });
 

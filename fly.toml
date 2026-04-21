@@ -3,6 +3,7 @@
 # 2) fly apps create <nombre-único>   (minúsculas, guiones)
 # 3) Sustituye "app" abajo por ese nombre
 # 4) fly secrets set DOCLING_API_KEY=...
+#    POC sin clave: fly secrets set DOCFLOW_SKIP_API_KEY_AUTH=true  (quitar antes de producción)
 # 5) fly deploy
 
 app = "fly-doc-flow"

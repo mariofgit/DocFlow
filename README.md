@@ -2,8 +2,11 @@
 
 Repositorio **DocFlow**: conversión de documentos con [Docling](https://github.com/docling-project/docling): API **síncrona** (`POST /api/v1/convert`), autenticación `X-API-Key`, límites 10 MB / 120 s, y la **misma imagen Docker** para desarrollo local (Docker Compose) y **AWS ECS Fargate** (CDK).
 
+El **PRD de producto** (descripción completa del ticket Linear) está en [`DOCFLOW_PRD.md`](DOCFLOW_PRD.md). Origen canónico: [NEU-577](https://linear.app/neuforce/issue/NEU-577/deploy-docling-document-conversion-service-rest-api-mcp). Para volver a exportar la descripción: desde la raíz de **neuForce** ejecuta `./linear.sh get NEU-577`.
+
 | Ruta | Descripción |
 |------|-------------|
+| [`DOCFLOW_PRD.md`](DOCFLOW_PRD.md) | PRD (copia sincronizada desde Linear NEU-577) |
 | [`service/`](service/) | FastAPI, `Dockerfile` multi-stage, `entrypoint.sh` (Gunicorn + Uvicorn workers) |
 | [`service/ui/`](service/ui/) | Interfaz web mínima (mismo origen que la API; la conversión sigue usando `X-API-Key`) |
 | [`docker-compose.yml`](docker-compose.yml) | Orquestación local |
