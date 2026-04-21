@@ -158,7 +158,10 @@ form.addEventListener("submit", async (e) => {
   try {
     const res = await fetch("/api/v1/convert", {
       method: "POST",
-      headers: { "X-API-Key": key },
+      headers: {
+        "X-API-Key": key,
+        Authorization: `Bearer ${key}`,
+      },
       body: fd,
     });
 

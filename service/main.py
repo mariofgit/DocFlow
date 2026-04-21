@@ -39,6 +39,23 @@ def _expected_api_key() -> str | None:
     return os.environ.get(API_KEY_ENV) or os.environ.get(API_KEY_LOCAL_ALIAS)
 
 
+def _normalize_api_key_fragment(raw: str | None) -> str:
+    """Trim + quita BOM por pegar desde algunos editores / shells."""
+    s = (raw or "").strip()
+    return s.lstrip("\ufeff") if s else s
+
+
+def _client_api_key_from_request(request: Request) -> str:
+    """X-API-Key o Authorization: Bearer (algunos proxies tratan mejor Bearer)."""
+    h = _normalize_api_key_fragment(request.headers.get("X-API-Key"))
+    if h:
+        return h
+    auth = request.headers.get("Authorization") or ""
+    if auth.lower().startswith("bearer "):
+        return _normalize_api_key_fragment(auth[7:])
+    return ""
+
+
 def _path_exempt_from_api_key(path: str) -> bool:
     """Static UI and health checks are public; conversion stays behind X-API-Key (PRD)."""
     if path in ("/health", "/healthz"):
@@ -66,6 +83,8 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         if _path_exempt_from_api_key(path):
             return await call_next(request)
+        if request.method == "OPTIONS":
+            return await call_next(request)
         expected = _expected_api_key()
         if not expected:
             return JSONResponse(
@@ -74,8 +93,9 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
                     "detail": "Server misconfiguration: set DOCLING_API_KEY (or API_KEY for local dev)",
                 },
             )
-        got = (request.headers.get("X-API-Key") or "").strip()
-        if got != (expected or "").strip():
+        got = _client_api_key_from_request(request)
+        want = _normalize_api_key_fragment(expected)
+        if got != want:
             return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
         return await call_next(request)
 
