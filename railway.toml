@@ -1,9 +1,9 @@
-# Usar en Railway con Root Directory = service (contexto = esta carpeta).
+# Contexto de build = raíz del repo. Ver Dockerfile.railway (prefijo service/).
 # https://docs.railway.com/reference/config-as-code
 
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+dockerfilePath = "Dockerfile.railway"
 
 [deploy]
 healthcheckPath = "/health"

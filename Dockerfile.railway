@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile:1
+# Railway: contexto = raíz del repo (Git). Misma imagen que service/Dockerfile.
+# Docker Compose y CDK siguen usando service/Dockerfile con context ./service.
+
+FROM python:3.11-slim-bookworm AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY service/requirements.txt .
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install -r requirements.txt
+
+COPY service/ .
+
+RUN python -c "from docling.document_converter import DocumentConverter; DocumentConverter()"
+
+FROM python:3.11-slim-bookworm AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    PORT=8080 \
+    GUNICORN_WORKERS=2 \
+    GUNICORN_TIMEOUT=130
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /opt/venv /opt/venv
+WORKDIR /app
+COPY --from=builder /app /app
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 8080
+
+ENTRYPOINT ["/app/entrypoint.sh"]
