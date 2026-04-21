@@ -52,6 +52,33 @@ body {
   margin-bottom: 2rem;
 }
 
+.brand-mark {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  line-height: 0;
+  text-decoration: none;
+}
+
+.brand-mark:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.brand-logo {
+  display: block;
+  height: 2.25rem;
+  width: auto;
+  max-width: min(100%, 220px);
+}
+
+@media (min-width: 768px) {
+  .brand-logo {
+    height: 2.75rem;
+    max-width: min(100%, 280px);
+  }
+}
+
 .eyebrow {
   font-size: 0.75rem;
   letter-spacing: 0.12em;
