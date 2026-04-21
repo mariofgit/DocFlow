@@ -20,7 +20,7 @@ const tabPreview = document.getElementById("tab-preview");
 const tabRaw = document.getElementById("tab-raw");
 const serverKeyHint = document.getElementById("server-key-hint");
 const debugLogEl = document.getElementById("debug-log");
-const debugPanel = document.getElementById("debug-panel");
+const debugSection = document.getElementById("debug-section");
 const debugClearBtn = document.getElementById("debug-clear");
 const debugCopyBtn = document.getElementById("debug-copy");
 
@@ -233,7 +233,7 @@ form.addEventListener("submit", async (e) => {
     }
 
     if (!res.ok) {
-      if (debugPanel) debugPanel.open = true;
+      debugSection?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       const msg =
         typeof body.detail === "string"
           ? body.detail
@@ -254,7 +254,7 @@ form.addEventListener("submit", async (e) => {
     addResultRow(body);
     renderOutput(body);
   } catch (err) {
-    if (debugPanel) debugPanel.open = true;
+    debugSection?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     debugLog("Fallo de red o excepción en el cliente", {
       name: err.name,
       message: err.message,

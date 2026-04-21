@@ -76,6 +76,20 @@
         </form>
       </section>
 
+      <section class="panel debug-section" id="debug-section" aria-labelledby="debug-steps-title">
+        <h2 id="debug-steps-title" class="panel-title">Registro de pasos (cliente)</h2>
+        <p class="debug-hint">
+          Aquí ves la secuencia de lo que hace el navegador: envío del archivo, respuesta HTTP y
+          <code>X-Docflow-Request-Id</code> para cruzar con <code>fly logs</code> / Docker. Los pasos internos de
+          Docling salen en el servidor; con <code>DOCFLOW_DEBUG=true</code> hay más detalle.
+        </p>
+        <div class="debug-toolbar">
+          <button type="button" class="ghost" id="debug-clear">Limpiar</button>
+          <button type="button" class="ghost" id="debug-copy">Copiar registro</button>
+        </div>
+        <pre class="debug-log" id="debug-log" aria-live="polite"></pre>
+      </section>
+
       <section class="panel" aria-labelledby="results-title">
         <h2 id="results-title" class="panel-title">Resultado</h2>
         <p id="error" class="error" role="alert" hidden></p>
@@ -98,20 +112,6 @@
             </tbody>
           </table>
         </div>
-
-        <details class="debug-panel" id="debug-panel">
-          <summary>Registro de depuración (cliente)</summary>
-          <p class="debug-hint">
-            Pasos del navegador y correlación con <code>X-Docflow-Request-Id</code> en la respuesta. Los detalles de
-            Docling aparecen en los logs del servidor (<code>fly logs</code> / Docker); activa
-            <code>DOCFLOW_DEBUG=true</code> para más verbosidad del SDK.
-          </p>
-          <div class="debug-toolbar">
-            <button type="button" class="ghost" id="debug-clear">Limpiar</button>
-            <button type="button" class="ghost" id="debug-copy">Copiar</button>
-          </div>
-          <pre class="debug-log" id="debug-log" aria-live="polite"></pre>
-        </details>
 
         <div class="output-panel" id="output-panel" hidden>
           <div class="output-header">

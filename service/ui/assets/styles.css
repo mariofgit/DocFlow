@@ -393,26 +393,6 @@ button:focus-visible {
   padding: 0.35em 0.5em;
 }
 
-.debug-panel {
-  margin-top: 1.25rem;
-  padding: 0.85rem 1rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.debug-panel summary {
-  cursor: pointer;
-  font-weight: 500;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.debug-panel[open] summary {
-  color: var(--text);
-  margin-bottom: 0.5rem;
-}
-
 .debug-hint {
   margin: 0 0 0.75rem;
   font-size: 0.78rem;
@@ -450,7 +430,8 @@ button.ghost:hover {
 
 .debug-log {
   margin: 0;
-  max-height: 280px;
+  min-height: 6rem;
+  max-height: 320px;
   overflow: auto;
   padding: 0.65rem 0.75rem;
   font-family: var(--mono);
@@ -458,6 +439,7 @@ button.ghost:hover {
   line-height: 1.45;
   color: var(--muted);
   background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
   border-radius: 8px;
   white-space: pre-wrap;
   word-break: break-word;
