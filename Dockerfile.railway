@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Railway: contexto = raíz del repo (Git). Misma imagen que service/Dockerfile.
+# Imagen para contexto = raíz del repo (Fly.io, Railway, etc.).
 # Docker Compose y CDK siguen usando service/Dockerfile con context ./service.
 
 FROM python:3.11-slim-bookworm AS builder

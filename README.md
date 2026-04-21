@@ -166,6 +166,38 @@ La app ya usa la variable **`PORT`** que Railway inyecta. En la **raíz del repo
 
 ---
 
+## Despliegue en Fly.io
+
+Usa el mismo [`Dockerfile.railway`](Dockerfile.railway) (contexto = raíz del repo). Config: [`fly.toml`](fly.toml).
+
+### Prerrequisitos
+
+- Cuenta en [Fly.io](https://fly.io) y CLI: `brew install flyctl` (o [instalación oficial](https://fly.io/docs/hands-on/install-flyctl/)).
+- **RAM:** el `fly.toml` pide **4 GB**; en planes gratuitos puede no bastar — revisa [precios / límites](https://fly.io/docs/about/pricing/).
+
+### Pasos
+
+1. **Login:** `fly auth login`
+2. **Nombre de app** (único global), por ejemplo:
+   ```bash
+   fly apps create docflow-tuusuario
+   ```
+3. Edita **`fly.toml`**: cambia `app = "docflow-reemplaza-esto"` por el **mismo** nombre que creaste.
+4. **Secreto obligatorio:**
+   ```bash
+   fly secrets set DOCLING_API_KEY="tu-secreto-largo"
+   ```
+   No uses `DOCFLOW_UI_PREFILL_API_KEY` en público.
+5. **Desde la raíz del repo DocFlow:**
+   ```bash
+   fly deploy
+   ```
+6. **Probar:** `fly status`, `fly logs`, y en el navegador `https://<tu-app>.fly.dev/health` y la UI en `/`.
+
+Variables no secretas (`GUNICORN_*`, `SYNC_TIMEOUT_*`, `PORT`) ya van en `[env]` del `fly.toml`; ajústalas ahí o con `fly secrets` si prefieres.
+
+---
+
 ## Si la UI muestra «Failed to fetch», 504 o el worker muere
 
 1. **Revisa los logs:** `docker compose logs --tail=200 docling-api`. Si aparece `Worker ... SIGKILL` / *Perhaps out of memory*, Docker necesita **más RAM** para el contenedor (en Docker Desktop: *Settings → Resources → Memory*). El `docker-compose.yml` fija `mem_limit: 4g` como referencia.

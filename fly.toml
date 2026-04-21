@@ -1,0 +1,38 @@
+# Fly.io — https://fly.io/docs/reference/configuration/
+# 1) fly auth login
+# 2) fly apps create <nombre-único>   (minúsculas, guiones)
+# 3) Sustituye "app" abajo por ese nombre
+# 4) fly secrets set DOCLING_API_KEY=...
+# 5) fly deploy
+
+app = "fly-doc-flow"
+primary_region = "dfw"
+
+[build]
+  dockerfile = "Dockerfile.railway"
+
+[env]
+  PORT = "8080"
+  GUNICORN_WORKERS = "1"
+  SYNC_TIMEOUT_SECONDS = "300"
+  GUNICORN_TIMEOUT = "320"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "10s"
+  grace_period = "5m"
+  method = "GET"
+  path = "/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 2
+  memory = "4gb"

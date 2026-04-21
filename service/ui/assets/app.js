@@ -114,13 +114,12 @@ const serverKey =
   typeof window.__DOCFLOW_PREFILL_API_KEY__ === "string"
     ? window.__DOCFLOW_PREFILL_API_KEY__
     : "";
+const saved = sessionStorage.getItem(STORAGE_KEY);
+// Si el servidor inyecta clave (solo entornos de confianza), tiene prioridad sobre sessionStorage.
 if (serverKey) {
   apiKeyInput.value = serverKey;
   if (serverKeyHint) serverKeyHint.hidden = false;
-}
-
-const saved = sessionStorage.getItem(STORAGE_KEY);
-if (saved) {
+} else if (saved) {
   apiKeyInput.value = saved;
   rememberKey.checked = true;
 }

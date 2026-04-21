@@ -1,0 +1,10 @@
+# Contexto raíz (Fly / Railway): no enviar artefactos pesados al daemon.
+.git
+cdk/node_modules
+cdk/cdk.out
+cdk/dist
+**/.venv
+**/__pycache__
+*.pyc
+.DS_Store
+docs

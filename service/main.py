@@ -74,8 +74,8 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
                     "detail": "Server misconfiguration: set DOCLING_API_KEY (or API_KEY for local dev)",
                 },
             )
-        got = request.headers.get("X-API-Key")
-        if got != expected:
+        got = (request.headers.get("X-API-Key") or "").strip()
+        if got != (expected or "").strip():
             return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
         return await call_next(request)
 
